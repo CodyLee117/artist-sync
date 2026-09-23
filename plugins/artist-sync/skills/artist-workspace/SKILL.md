@@ -3,10 +3,10 @@ name: artist-workspace
 description: Use in the team's shared artist workspace project, whatever it's named (its folder contains artist-workspace.json), for any art, animation, Adobe Animate, script, reference, technique or "how do we usually…" request, and whenever making something reusable there. Looks things up in the workspace first and saves reusable work back to it. Outside that folder, do nothing.
 ---
 
-> **Installed version 0.6.0.** Before following this file, check `.artist-sync/system.json` in the workspace folder (the one
-> containing `artist-workspace.json`). Suppose its `active` version is newer than 0.6.0, its `by` is in `maintainers`
+> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
+> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
 > (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-workspace/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.6.0 as the installed version (for the
+> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
 > reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
 > the installed skills", carry on with this file. (If you reached this file from an installed skill's
 > preamble, skip this block: the installed version is already known.)
@@ -30,7 +30,9 @@ copy, never Drive directly (the **artist-sync** skill moves changes between them
 ## While working
 - **Save reusable things to the workspace, not somewhere random:**
   - a script worth keeping → the right `plugins/` folder, plus a line in `knowledge/tools.md` (name, what it does, how to run
-    it, who made it). It gets an **artist-build-review** before it's shared;
+    it, who made it). It gets an **artist-build-review** before it's shared. **Desktop setup:** draft it in
+    `.artist-sync/staging/`, review it and scan it for secrets there, and only then copy it into `plugins/`, because anything
+    saved in the workspace is shared instantly;
   - a decision, technique, reference or lesson → a short note in `knowledge/`, one topic per file, named plainly
     (`knowledge/walk-cycle-timing.md`);
   - a prompt or workflow that worked → `templates/`.

@@ -3,10 +3,10 @@ name: artist-sync-publish
 description: For workspace maintainers only. Publishes a new version of the artist-sync skills to the team's skill-updates folder so every artist's agent switches to it on its next sync, with no reinstall. Use when the maintainer runs /publish-skill-update, or says "publish the new skills" or "push a skill update to the team".
 ---
 
-> **Installed version 0.6.0.** Before following this file, check `.artist-sync/system.json` in the workspace folder (the one
-> containing `artist-workspace.json`). Suppose its `active` version is newer than 0.6.0, its `by` is in `maintainers`
+> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
+> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
 > (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-sync-publish/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.6.0 as the installed version (for the
+> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
 > reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
 > the installed skills", carry on with this file. (If you reached this file from an installed skill's
 > preamble, skip this block: the installed version is already known.)

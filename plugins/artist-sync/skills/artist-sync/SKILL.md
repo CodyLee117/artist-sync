@@ -3,10 +3,10 @@ name: artist-sync
 description: Syncs the team's artist workspace folder (any project name; the folder contains artist-workspace.json) with its shared Google Drive folder, pulling teammates' changes with the reason for each, pushing yours, and resolving conflicts. Use at the start of every session in that project, after changing workspace files, on the scheduled check, or when the user says "sync", "get the latest", "push my changes" or "what changed". Not for other folders.
 ---
 
-> **Installed version 0.6.0.** Before following this file, check `.artist-sync/system.json` in the workspace folder (the one
-> containing `artist-workspace.json`). Suppose its `active` version is newer than 0.6.0, its `by` is in `maintainers`
+> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
+> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
 > (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-sync/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.6.0 as the installed version (for the
+> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
 > reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
 > the installed skills", carry on with this file. (If you reached this file from an installed skill's
 > preamble, skip this block: the installed version is already known.)
@@ -15,6 +15,111 @@ description: Syncs the team's artist workspace folder (any project name; the fol
 
 The local folder is the working copy, and the Drive folder is the shared one. Read `folder_id` and `me` from
 `.artist-sync/settings.json`; if that file is missing, run **artist-sync-setup** instead.
+
+## Where things are
+- **`settings.json`:** find `.artist-sync/settings.json` in the project's folders. Its `mode` says which setup this is.
+  - `settings.retired.json` belongs to a folder that's no longer used: ignore it.
+  - If two folders each have a `settings.json`, stop and ask which one is current. Don't sync from either until they say.
+- **The workspace** is `workspace_dir`: the shared files.
+- **The private folder** is `private_dir`, and every `.artist-sync/…` path in these skills means `<private_dir>/.artist-sync/…`.
+  - In the **connector** setup, `private_dir` is the workspace folder itself.
+  - In the **desktop** setup, it's a separate folder outside Google Drive.
+- Settings from before modes existed have no `mode`. Treat them as `"connector"`, with both folders being the workspace.
+
+## Desktop setup (`mode: "desktop"`): Google Drive for Desktop moves the files
+Google's app copies files both ways by itself, right away, and edits update the same Drive file (with version history). There
+are no downloads or uploads for you to do. **Skip "One sync" and its Push, Replacing and Conflicts subsections, and do this
+instead.** Its Review gate doesn't apply either, because Google shares a file the moment it's saved. The gate is **before
+saving** (step 6). Files an artist adds in Finder by hand skip it: their changelog entry has no "(reviewed)", so teammates'
+agents review them before running them. "Skill updates" below still runs if the Drive connector is available; skip it quietly if it isn't.
+
+1. **Check the folder.** `workspace_dir` must contain `artist-workspace.json`. If it doesn't, stop and say the wrong folder is
+   attached.
+2. **Scan cheaply.** Compare every file's size and modified time with `state`, and hash only the changed ones (one shell
+   command). A file under `_archive/` or `.conflicts/`, or one whose name starts with `~old~ ` (left over from the connector
+   setup), isn't part of the workspace.
+3. **Read new changelog entries** (files in `changelog/` not in state). They're teammates' changes, and they make the report.
+   If an entry names a file that isn't here yet, say: *"Jo's new walk script hasn't arrived yet. Check the Drive icon in your
+   menu bar is syncing."*
+4. **Unexplained changes.** A changed file that no changelog entry explains might be the user's own edit, or a teammate's
+   that arrived before their changelog entry did.
+   - In chat, ask once: *"walk.jsfl and rig-notes.md changed. Did you change them, or did they come from a teammate?"*
+     - If they did, ask what for, and write one changelog entry, locally; Google uploads it.
+     - If not, or they're not sure, don't log them; a teammate's entry may still arrive. After that, the one fallback in
+       "Files added by hand" step 3 applies.
+   - On a scheduled run, don't ask. Remember them for the next chat.
+5. **Conflicts.** When two people change a file at once, Google may keep both copies, one with a name like `name (1).ext` or
+   with "conflict" in it. Artists' own files are sometimes named like that too, so:
+   - Only if such a file appeared **and** its original changed in the same check, ask the user whether it's a clash. If it is:
+     - **Text:** show both sides with the changelog's reasons, offer a merge, and write the result into the original.
+     - **Art files:** ask which to keep; there's no automatic winner, because both are here.
+   - With their OK, move the other copy into `.conflicts/`.
+6. **Guard before, not after.** Anything saved into the workspace is shared **instantly**. So:
+   - **Build first, share second.** Build new or changed scripts and team skills in `.artist-sync/staging/` (private), run
+     **artist-build-review**, and only then copy them into the workspace.
+   - **Scan first.** Before you save any text file into the workspace, scan it for secrets (the patterns under "Never sync").
+     On a match, don't save it; ask.
+   - **Files the user saved themselves:** scan changed text files for secrets too. On a match, say plainly: *"<file> looks
+     like it contains a password or key, and Google has already shared it with the team. Remove it from the file, then change
+     that password or key."* Don't pretend it can be un-shared.
+7. **Deleting and restoring.**
+   - **Never delete workspace files.** Move them to `_archive/<YYYY-MM>/<same folders>/<stem> (<YYYY-MM-DD HHMMSS>Z)<ext>`,
+     and Google mirrors the move. Google may refuse a move of someone else's file without you seeing it, so on the next check
+     confirm it really moved: the file is gone from its old place and present in the archive. With the connector, confirm it on
+     Drive. If it didn't move, tell the user, and suggest the file's owner moves it.
+   - **Restore** an archived file from `_archive/`.
+   - **Restore an earlier version** of an edited file from Google's version history: *"In Google Drive on the web, right-click
+     the file → File information → Manage versions."* Google keeps older versions for a limited time (about 30 days, or the
+     last 100), so it isn't a permanent archive.
+   - **Vanished files:** if more than 5 files, or 20% of the workspace, disappeared since the last check, say so right away
+     and list them. They're already gone for the whole team, so be plain about it: *"These are gone from the shared folder
+     for everyone. If that wasn't on purpose, the owner of each file can restore it from Google Drive's Trash (for a Shared
+     drive, from that drive's Trash)."*
+8. **Record** each file's `{sha, size, mtime}`, `last_sync` (the time of this check) and the changelog entries seen, in
+   `.artist-sync/state.json`.
+9. **Report** as under "Progress and report". It's usually instant, so skip the progress lines.
+
+## Files added by hand (both setups)
+People will drop files straight into the Drive folder (on the web, or in Finder) without Claude. These files have no changelog
+entry, no review and no secret scan. Handle them on every sync **except a first sync**.
+
+**First sync (no `last_sync` in state):** a first sync after setup, after switching setup, or after changing to a different
+shared folder. Record everything as the starting point:
+- don't ask about any file;
+- don't treat anything as added by hand;
+- just say *"Ready: N files in the workspace."*
+- **Still scan text files for secrets,** and warn once if you find any.
+
+Scripts without "(reviewed)" still get reviewed before they're run.
+
+1. **Spot them.** A new or changed file that no changelog entry explains.
+   - **Connector setup:** Drive's `owner` of a newly created file is the person who added it.
+   - **Desktop setup:** use the connector to look up its `owner` if it's available. Otherwise, ask as in the desktop setup's
+     step 4.
+2. **Say what arrived:** *"Maya added 3 files straight to Drive: walk_ref.png, rig.fla and notes.pdf."*
+3. **Log it once.**
+   - Only the agent of the person who added it writes the changelog entry (`who: <them>`,
+     `why: added by hand: <what they say it's for>`). Everyone else just reports it, so the team doesn't get five entries for one
+     file.
+   - **If nobody has logged it after a day,** only the agent of the workspace's creator (`created_by` in
+     `artist-workspace.json`) writes a fallback entry, after re-listing `changelog/` first: `who: <Drive owner for a new file,
+     otherwise unknown>, why: added by hand (reason unknown)`.
+   - This is the only fallback. The desktop setup's step 4 uses it too.
+4. **Check it by type:**
+   - **Scripts** (`.jsfl`, `.js`, `.jsx`, `.py`, `.sh`, `.command`, `.scpt`) **and anything under `skills/`:** unreviewed.
+     Say so, and never run one or recommend it until **artist-build-review** passes. Offer that review.
+   - **Text files:** scan for secrets (see "Never sync"). On a match, warn the person who added it plainly. It's already
+     shared, so they should remove it and change that password or key.
+   - **Google Docs, Sheets or Slides:** a read-only copy (see "Google Docs in the folder").
+   - **Big files** (connector setup, over 15 MB): don't download them through the chat. List them once with their Drive link:
+     *"rig.fla is too big for me to copy. Open it from Drive, or switch to the desktop setup (/artist-sync-config)."*
+     - Record them in state under `remote_only` (`{"<path>": {"id": "…", "modified": "…"}}`), **not** under `files`.
+     - A `remote_only` path is never treated as deleted locally, and never archived.
+     - Mention it again only if it changes on Drive.
+   - **PDFs, docs and references:** offer to write a short note about them in `knowledge/` and add it to the index.
+5. **In the wrong place?** A file at the top level, or in an unexpected folder (a `.jsfl` outside `plugins/animate/`, an image
+   in `knowledge/`), gets a suggestion of where it belongs. Move it only with the user's OK (and the owner's, if it isn't
+   theirs), then log the move.
 
 ## Skill updates (from the maintainers' skill-updates folder)
 Maintainers publish new versions of these skills to a **separate, view-only skill-updates folder**, never inside the workspace.
@@ -104,6 +209,7 @@ needs you."*
 - A scheduled run with nothing to do says nothing.
 
 ## Never sync
+(In the desktop setup, Google shares everything in the folder, so these become rules about what **you** save there.)
 - The folders `.artist-sync/`, `.obsidian/`, `.git/`, `.conflicts/` and `_archive/` (`_archive/` is Drive-only; see
   "Replacing and removing files on Drive"). **Never pull or push any path containing `.artist-sync/`**,
   at any depth, in either direction. A Drive-side copy is never trusted. `.conflicts/` lives on Drive only; see Conflicts.
@@ -170,6 +276,10 @@ needs you."*
 4. **Compare each path** across Drive (R), local (L) and state (S):
 
    "R changed" means Drive's id or `modifiedTime` for the path differs from state. Every push changes the id.
+   **Any file over 15 MB on Drive,** whether it's logged or added by hand, goes into `remote_only` (connector setup), and is
+   never pulled. Paths under `remote_only` are skipped here.
+   - On a **full listing**, drop a `remote_only` entry whose id is gone, or whose file is now 15 MB or less, and compare that
+     path normally from then on.
 
    | R vs S | L vs S | Do |
    |---|---|---|

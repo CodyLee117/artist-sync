@@ -3,10 +3,10 @@ name: artist-build-review
 description: Independent review of any script, tool or team skill before it's shared through the artist workspace. Use before artist-sync pushes a new or changed file under plugins/ or skills/, after building something for an artist, and when the user asks "is this safe?" or "check this script". The artist never has to read code.
 ---
 
-> **Installed version 0.6.0.** Before following this file, check `.artist-sync/system.json` in the workspace folder (the one
-> containing `artist-workspace.json`). Suppose its `active` version is newer than 0.6.0, its `by` is in `maintainers`
+> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
+> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
 > (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-build-review/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.6.0 as the installed version (for the
+> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
 > reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
 > the installed skills", carry on with this file. (If you reached this file from an installed skill's
 > preamble, skip this block: the installed version is already known.)
@@ -19,6 +19,9 @@ before it goes to the shared folder. That means anything new, changed or removed
 - Images and fonts are recorded without review.
 - For a browser extension, check that its `manifest.json` permissions and host list match its purpose.
 - Only run a review while the user is in the chat, never on a scheduled run.
+
+**Desktop setup:** files saved in the workspace are shared instantly, so build and review in `.artist-sync/staging/` (the
+private folder), and copy into the workspace only after the review passes.
 
 ## 1. Get an independent reviewer
 - **If you can start a sub-agent or subtask, do.** Give it only:
@@ -55,7 +58,9 @@ before it goes to the shared folder. That means anything new, changed or removed
   reviewed folder counts as a change.
 - Mention it in the changelog entry's `why`, e.g. *"… (reviewed)"*.
 - A **skill release** (artist-sync-publish) records nothing in `reviewed.json`. Its changelog's "(reviewed)" is the record.
-- **artist-sync won't push** a file under `plugins/` or `skills/` whose current hash isn't in `reviewed.json`. Any change after
+- Paths in `reviewed.json` are workspace paths (`plugins/…`, `skills/…`), even for something reviewed in `staging/`.
+- **Connector setup:** artist-sync won't push a file under `plugins/` or `skills/` whose current hash isn't in `reviewed.json`.
+  **Desktop setup:** nothing is copied into the workspace until it passes. Any change after
   the review means reviewing again.
 - **Files pulled from teammates:** before you run or recommend a pulled script, check that its changelog entry says
   "(reviewed)". If it doesn't, or it has no entry (for example someone dropped it into Drive by hand, or they're on an older
