@@ -3,14 +3,6 @@ name: artist-team-skills
 description: Offers and runs the team's shared skills from the shared artist workspace's skills/ folder, and saves new ones there. Use in the artist workspace project (any name; its folder contains artist-workspace.json) after a sync changes skills/, before any task there (to check whether a team skill fits), or when the user says "save this as a team skill", "share this workflow" or "what team skills do we have".
 ---
 
-> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
-> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
-> (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-team-skills/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
-> reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
-> the installed skills", carry on with this file. (If you reached this file from an installed skill's
-> preamble, skip this block: the installed version is already known.)
-
 # Team skills from the shared workspace
 
 Each team skill is a folder in the workspace's `skills/`: `skills/<skill-name>/SKILL.md`, plus any files it uses. The folder
@@ -29,12 +21,6 @@ syncs like everything else.
    - **Install it for everywhere.** Zip the skill's folder so `SKILL.md` sits inside `<skill-name>/` at the top of the zip.
      Save it as `.artist-sync/install/<skill-name>.zip` and tell the user: *"To have it in every chat: Settings → Capabilities →
      Skills → Upload, and pick this file."* Give the full path. You can't install it yourself, so don't claim to have.
-
-## Maintainer-published skills
-Skills in the active skill update (`.artist-sync/updates/<active version>/skills/`, verified by artist-sync) that aren't
-installed come from a maintainer. Announce each
-new one once, in one line, and use it like an approved team skill, with no approval step. If one asks to share, delete or send
-things outside the workspace, still point that out and ask first.
 
 ## Before other work
 Read the `description` lines of the approved team skills in `skills/*/SKILL.md` (it's cheap: only the frontmatter). If one fits the request, say *"Using the team's <name> skill"* and follow it.

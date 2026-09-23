@@ -3,14 +3,6 @@ name: artist-sync
 description: Syncs the team's artist workspace folder (any project name; the folder contains artist-workspace.json) with its shared Google Drive folder, pulling teammates' changes with the reason for each, pushing yours, and resolving conflicts. Use at the start of every session in that project, after changing workspace files, on the scheduled check, or when the user says "sync", "get the latest", "push my changes" or "what changed". Not for other folders.
 ---
 
-> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
-> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
-> (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-sync/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
-> reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
-> the installed skills", carry on with this file. (If you reached this file from an installed skill's
-> preamble, skip this block: the installed version is already known.)
-
 # Artist workspace sync
 
 The local folder is the working copy, and the Drive folder is the shared one. Read `folder_id` and `me` from
@@ -24,6 +16,7 @@ The local folder is the working copy, and the Drive folder is the shared one. Re
 - **The private folder** is `private_dir`, and every `.artist-sync/…` path in these skills means `<private_dir>/.artist-sync/…`.
   - In the **connector** setup, `private_dir` is the workspace folder itself.
   - In the **desktop** setup, it's a separate folder outside Google Drive.
+- `.artist-sync/system.json` and `.artist-sync/updates/`, left by versions before 0.8.0, are no longer used. Leave them alone.
 - Settings from before modes existed have no `mode`. Treat them as `"connector"`, with both folders being the workspace.
 
 ## Desktop setup (`mode: "desktop"`): Google Drive for Desktop moves the files
@@ -31,7 +24,7 @@ Google's app copies files both ways by itself, right away, and edits update the 
 are no downloads or uploads for you to do. **Skip "One sync" and its Push, Replacing and Conflicts subsections, and do this
 instead.** Its Review gate doesn't apply either, because Google shares a file the moment it's saved. The gate is **before
 saving** (step 6). Files an artist adds in Finder by hand skip it: their changelog entry has no "(reviewed)", so teammates'
-agents review them before running them. "Skill updates" below still runs if the Drive connector is available; skip it quietly if it isn't.
+agents review them before running them.
 
 1. **Check the folder.** `workspace_dir` must contain `artist-workspace.json`. If it doesn't, stop and say the wrong folder is
    attached.
@@ -120,70 +113,6 @@ Scripts without "(reviewed)" still get reviewed before they're run.
 5. **In the wrong place?** A file at the top level, or in an unexpected folder (a `.jsfl` outside `plugins/animate/`, an image
    in `knowledge/`), gets a suggestion of where it belongs. Move it only with the user's OK (and the owner's, if it isn't
    theirs), then log the move.
-
-## Skill updates (from the maintainers' skill-updates folder)
-Maintainers publish new versions of these skills to a **separate, view-only skill-updates folder**, never inside the workspace.
-This check runs on every sync, **after** the workspace files have been pulled. It only ever downloads, and it **never pushes**.
-
-**Trusting a folder or file ("maintainer-only").** A Drive item passes only if both hold:
-- its `owner` is in `maintainers` (an exact email match, ignoring case);
-- `get_file_permissions` shows no `writer` or `owner` except users in `maintainers`.
-  - Any writer entry of type `anyone`, `domain` or `group` fails, whether or not it's inherited from a parent folder.
-  - If the list doesn't include your own entry, treat it as incomplete and fail.
-
-This permissions check is the real protection. The timestamp check below is only a second signal. If a permission, owner or
-timestamp is missing, fail closed.
-
-**Where the folder comes from:** `updates_folder_id` in `.artist-sync/settings.json`.
-- **It is only ever set by the user**, from the link in the maintainer's own Google share email. That happens in setup or in
-  Repair mode ("set up skill updates"). It's never taken from a workspace file, because anyone who can edit the workspace
-  could change one.
-- The folder must also pass the maintainer-only check, and must not be the workspace folder or inside it. Before saving, show the folder's name and owner and ask: *"Is this the skill-updates folder <maintainer> set up
-  for the team?"* Save only on a yes.
-- If it's empty and `artist-workspace.json` names an `updates_folder`, only **tell** the user, once: *"Your team has skill
-  updates. To turn them on, open the email from <maintainer> saying they shared a 'skill updates' folder with you, and paste
-  its link here."*
-
-**Each sync:**
-1. **Find new releases.**
-   - List `release.json` files at the top of the skill-updates folder. Mid-publish there may be two; take the one with the
-     **highest version** first.
-   - Skip any whose id is in `system.json` → `rejected` or equals `active.release_id`.
-   - If none is left, skip to step 6.
-2. **Check the release.json.**
-   - It must be maintainer-only.
-   - Its `createdTime` must equal its `modifiedTime`. Read both with `get_file_metadata`, because listings don't include
-     `createdTime`.
-   - Its version must be newer than `active.version`, or than the installed version if nothing is active.
-3. **Fetch every file in its `files` list**, including the plugin zip if listed, into `.artist-sync/updates/<version>/`.
-   - To find each file, list `releases/<version>/` one level at a time, as in One sync step 1, and match paths by title.
-   - Each file must be maintainer-only, have `createdTime` equal to `modifiedTime`, and match its sha256 in `files`.
-   - Record each file's Drive id for step 6.
-4. **If everything passed,** write `.artist-sync/system.json`:
-   ```json
-   {"active": {"version": "…", "release_id": "…", "by": "<release.json's verified Drive owner>",
-               "files": {"<path>": {"sha": "…", "id": "…"}}, "min_installed": "…", "notes": "…"},
-    "rejected": {"<release.json id>": "<date>"}}
-   ```
-   Then tell the user: *"Your workspace skills were updated to <version>: <notes>."*
-5. **If anything failed,** change nothing: keep the current `active`.
-   - **A file simply missing from `releases/<version>/`** means the publish is probably still uploading. Try again next sync.
-     Add it to `rejected` only once 30 minutes have passed since release.json's `createdTime`.
-   - **An owner, permission, timestamp or sha failure** goes into `rejected` straight away.
-   - Tell the user **once**: *"A skill update didn't pass its safety checks, so I've kept your current skills."*
-6. **Self-repair (always runs):** if a file in `.artist-sync/updates/<active version>/` doesn't match its recorded sha,
-   download it again by its recorded id, with the same checks, and say so. If that fails, remove `active`, and the installed
-   skills take over.
-7. **Reinstall nudge (always runs):** if `active.min_installed` is newer than the installed version (the version in the
-   installed skill's preamble), add: *"This update also needs a quick reinstall: Customize → Plugins → upload
-   `.artist-sync/updates/<version>/<zip>`."* Repeat it each session until the installed version catches up.
-
-**Turning an update off or back on (no files to delete):**
-- If the user says **"turn off this skill update"**, add `active.release_id` to `rejected`, remove `active`, and confirm that
-  they're back on the installed skills. The next release arrives normally.
-- **"Use the installed skills"** does the same for this session only.
-- **"Retry the skill update"**, or any change to `maintainers` or `updates_folder_id` in Repair mode, clears `rejected`, so
-  that previously refused releases are checked again.
 
 ## If the app blocks a delete or move
 Cowork may ask the user's permission before a file is deleted or moved, or may refuse it.

@@ -32,30 +32,13 @@ setup.
   drafts procedure and project notes, proposes 3–5 non-generative helpers, and builds one.
 - `artist-build-review`: an independent sub-agent review of every script and team skill before it's shared; unreviewed work is never shared: in the connector setup, sync refuses
   unreviewed ones.
-- `artist-sync-publish` (`/publish-skill-update`): for maintainers only; publishes a skill update to everyone.
 - `artist-sync-config` (`/artist-sync-config`): shows and changes your settings, including switching between the desktop and
   connector setups.
 - `artist-team-skills`: runs teammates' skills from `skills/` once you approve them, and can package one for install.
 
-## Updating everyone's skills (no reinstall)
-The installed skills check for a newer release from a separate **skill-updates folder**. That folder is owned by a
-maintainer, sits in their My Drive, and is shared with the artists **view-only**, so nobody else can change it. Sync accepts a
-release only if:
-- it was uploaded by a maintainer;
-- it shows no sign of later edits. That's only a second signal, because Drive timestamps can be faked. The real protection
-  is that only maintainers have ever had edit access;
-- it is complete, with every file matching the hash listed in its `release.json`.
-
-Updates download into `.artist-sync/`, which is never synced. Maintainers and the skill-updates folder are fixed on each
-artist's computer, and the folder is only ever set from the link in the maintainer's own Google share email. Never give anyone
-else edit access to the skill-updates folder.
-- **To publish:** a maintainer runs `/publish-skill-update` with the new plugin zip. Everyone's next sync picks it up and tells
-  them what changed.
-- **A new or renamed command needs a real reinstall.** The update then nudges each artist with the zip's path.
-- **The workspace itself can be anywhere, Shared Drives included.** Only the skill-updates folder must be in a maintainer's
-  My Drive.
-- **If an update misbehaves,** say "turn off this skill update" to go back to the installed skills until the next release,
-  or "use the installed skills" for just this session.
+## Updates
+New versions come through the plugin marketplace: click **Update** on the marketplace in Cowork (Cowork also checks by itself).
+One plugin holds every skill and command, so new skills arrive the same way.
 
 ## Limits
 - The Drive connector can't overwrite a file, so each push uploads a new copy and bins the old one. The file's link changes.

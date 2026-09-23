@@ -3,14 +3,6 @@ name: artist-build-review
 description: Independent review of any script, tool or team skill before it's shared through the artist workspace. Use before artist-sync pushes a new or changed file under plugins/ or skills/, after building something for an artist, and when the user asks "is this safe?" or "check this script". The artist never has to read code.
 ---
 
-> **Installed version 0.7.0.** Before following this file, check `.artist-sync/system.json` in the private folder (the project folder
-> whose `.artist-sync/settings.json` exists; in the connector setup, that's the workspace folder itself). Suppose its `active` version is newer than 0.7.0, its `by` is in `maintainers`
-> (`.artist-sync/settings.json`), and `.artist-sync/updates/<active version>/skills/artist-build-review/SKILL.md` exists with the sha256
-> listed in `active.files`. If all of that holds, **follow that file instead**. Remember 0.7.0 as the installed version (for the
-> reinstall check), and mention once per session that you're using the <version> update. Otherwise, or if the user said "use
-> the installed skills", carry on with this file. (If you reached this file from an installed skill's
-> preamble, skip this block: the installed version is already known.)
-
 # Review before sharing
 
 The artists aren't developers and shouldn't have to review code. Every script, tool or team skill gets an **independent review**
@@ -57,7 +49,6 @@ private folder), and copy into the workspace only after the review passes.
 - Add every file in the reviewed folder to `.artist-sync/reviewed.json` as `{"<path>": "<sha256>"}`. Removing a file from a
   reviewed folder counts as a change.
 - Mention it in the changelog entry's `why`, e.g. *"… (reviewed)"*.
-- A **skill release** (artist-sync-publish) records nothing in `reviewed.json`. Its changelog's "(reviewed)" is the record.
 - Paths in `reviewed.json` are workspace paths (`plugins/…`, `skills/…`), even for something reviewed in `staging/`.
 - **Connector setup:** artist-sync won't push a file under `plugins/` or `skills/` whose current hash isn't in `reviewed.json`.
   **Desktop setup:** nothing is copied into the workspace until it passes. Any change after
