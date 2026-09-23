@@ -1,0 +1,8 @@
+{
+  "name": "artist-sync",
+  "version": "0.6.0",
+  "description": "A shared Google Drive workspace for artists: notes, Animate scripts, browser tools and team skills, kept in sync between everyone's Claude.",
+  "author": {
+    "name": "Cody Lee"
+  }
+}

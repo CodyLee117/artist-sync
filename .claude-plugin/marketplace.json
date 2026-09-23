@@ -1,0 +1,11 @@
+{
+  "name": "artist-sync",
+  "owner": { "name": "Cody Lee" },
+  "plugins": [
+    {
+      "name": "artist-sync",
+      "source": "./plugins/artist-sync",
+      "description": "A shared Google Drive workspace for artists: notes, Animate scripts, browser tools and team skills, kept in sync by Claude in Cowork."
+    }
+  ]
+}
